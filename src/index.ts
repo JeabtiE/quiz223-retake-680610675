@@ -21,7 +21,7 @@ app.use(morgan("dev"));
 // app.use(morgan("combined"));
 
 app.use("/api/v675/auth", usersRoutes);
-app.use("/api/v675/items", itemsRoutes);
+app.use("/api/v675/basket", itemsRoutes);
 
 // Endpoints
 app.get("/", (req: Request, res: Response) => {
