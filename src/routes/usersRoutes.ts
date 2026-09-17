@@ -4,22 +4,42 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 dotenv.config();
 
-import type { User, CustomRequest } from "../libs/types.js";
+import type { User, CustomRequest, UserPayload } from "../libs/types.js";
 
 // import authentication middleware
-import { authenticateToken } from "../middlewares/authenMiddleware.ts";
+import { authenticateToken } from "../middlewares/authenMiddleware.js";
 
 // import database
-import { users } from "../db/db.ts";
+import { users } from "../db/db.js";
 
 const router = Router();
 
 // POST /api/vXXX/auth/login
 router.post("/login", (req: Request, res: Response) => {
   try { 
+    const { username, password } = req.body ?? {};
+    const user = users.find(
+      (u: User) => u.username === username && u.password === password
+    );
+
+    if (!user) {
+      return res.status(401).json({
+        success: false, 
+        message: "Username or Password is incorrect",
+      });
+    }
+    const jwt_secret = process.env.JWT_SECRET || "this_is_my_secret";
+    const payload: UserPayload = {
+      username: user.username, 
+      userId: user.userId ?? undefined,
+    };
+    const token = jwt.sign(payload, jwt_secret, { expiresIn: "10m" });
+    user.tokens = user.tokens ? [...user.tokens, token] : [token];
+
     return res.status(200).json({
       success: true,
       message: "Login successful",
+      token,
     });
   } catch (err) {
     return res.status(500).json({
